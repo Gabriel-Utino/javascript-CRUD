@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MiniX</title>
+    <style>
+      body {
+        background-color: #4ea877c7;
+      }
+    </style>
+  </head>
+  <body>
+    <form>
+      <input name="createPostArea" placeholder="Digite o seu post" />
+      <button type="submit">Post X</button>
+    </form>
+    <ul class="listPosts"></ul>
+
+    <script>
+      //modelo
+      const miniX = {
+        user: [
+          {
+            usename: 'gabriel'
+          }
+        ],
+        posts: [
+          {
+            id: Date.now(),
+            owner: 'Gabriel',
+            content: 'First X'
+          }
+        ],
+        readPosts() {
+          miniX.posts.forEach(({ id, owner, content }) => {
+            miniX.createPost({ id, owner: owner, content: content }, true)
+          })
+        },
+        createPost(dados, htmlOnly = false) {
+          //メモリー内にポスト（配列、オブジェクト）を作る
+          const idInter = Date.now()
+          if (!htmlOnly) {
+            miniX.posts.push({
+              id: dados.id || idInter,
+              owner: dados.owner,
+              content: dados.content
+            })
+          }
+          //HTML内にポストを作る
+          const $listPosts = document.querySelector('.listPosts')
+          $listPosts.insertAdjacentHTML(
+            'afterbegin',
+            `
+            <li date-id="${idInter}">
+              <button class="btn-delete">DELETE</button>
+              <span contenteditable>
+                ${dados.content}
+              </span>
+            </li>`
+          )
+        },
+        deletePost(id) {
+          const updatedPostList = miniX.posts.filter((postCurrent) => {
+            return postCurrent.id !== Number(id)
+          })
+          miniX.posts = updatedPostList
+        },
+        updatePost(id, newContent) {
+          const updatePost = miniX.posts.find((post) => {
+            return post.id === Number(id);
+          })
+          console.log(updatePost)
+          updatePost.content = newContent
+        }
+
+      }
+
+      //Front End: Web
+      const $myForm = document.querySelector('form')
+      console.log($myForm)
+
+      //CRUD : READ
+      miniX.readPosts()
+
+      //CRUD : CREATE
+      $myForm.addEventListener('submit', function createPostController(eventInfo) {
+        eventInfo.preventDefault()
+        console.log('Create new post')
+        const $createPostArea = document.querySelector('input[name="createPostArea"]')
+
+        miniX.createPost({ owner: 'Valeria', content: $createPostArea.value })
+
+        $createPostArea.value = ''
+      })
+
+      //CRUD : DELETE
+      document.querySelector('.listPosts').addEventListener('click', function (eventInfo) {
+        console.log('クリック確認')
+        const elementCurrent = eventInfo.target
+        const isBtnDeleteClick = elementCurrent.classList.contains('btn-delete')
+        if (isBtnDeleteClick) {
+          console.log('ボタンのクリック確認')
+          const id = elementCurrent.parentNode.getAttribute('date-id')
+
+          //サーバーサイドの操作
+          miniX.deletePost(id)
+          //フロントを操作
+          elementCurrent.parentNode.remove()
+
+
+          
+          console.log(miniX.posts)
+        }
+      })
+
+      //CRUD : UPDATE
+      document.querySelector('.listPosts').addEventListener('input', function (eventInfo) {
+        console.log('UPDATE')
+        const elementCurrent = eventInfo.target
+        const id = elementCurrent.parentNode.getAttribute('date-id')
+
+        miniX.updatePost(id, elementCurrent.innerText)
+      })
+    </script>
+  </body>
+</html>
